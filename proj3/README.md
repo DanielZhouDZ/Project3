@@ -5,13 +5,13 @@ Chengming Li
 **Partner 2:**
 Daniel Zhou
 ## Classes and Data Structures
-- [ ] List(Room) rooms: the list of rooms
-- [ ] WQU: each number representing the room at that index in rooms, used to determine if all the rooms are reachable or not
-- [ ] Room
+- [x] List(Room) rooms: the list of rooms
+- [x] WQU: each number representing the room at that index in rooms, used to determine if all the rooms are reachable or not
+- [x] Room
   - Point center: center of the room 
   - int width: width of room
   - int height: height of room
-- [ ] Point:
+- [x] Point:
   - int x: x coordinate of point
   - int y: y coordinate of point
 ## Algorithms
