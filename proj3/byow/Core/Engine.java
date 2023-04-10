@@ -22,6 +22,8 @@ public class Engine {
     private WeightedQuickUnionUF disjointSet;
     public static final TETile FLOOR = Tileset.FLOOR;
     public static final TETile WALL = Tileset.WALL;
+    private static final int RATIO = 300;
+    private static final int ROOMSIZE = 8;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -52,13 +54,6 @@ public class Engine {
      * @return the 2D TETile[][] representing the state of the world
      */
     public TETile[][] interactWithInputString(String input) {
-        // TODO: Fill out this method so that it run the engine using the input
-        // passed in as an argument, and return a 2D tile representation of the
-        // world that would have been drawn if the same inputs had been given
-        // to interactWithKeyboard().
-        //
-        // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
-        // that works for many different input types.
         input = input.toUpperCase();
         listOfRooms = new ArrayList<>();
         long seed = 0;
@@ -77,8 +72,7 @@ public class Engine {
                 seed = Long.parseLong(input.substring(1, i));
                 this.random = new Random(seed);
                 this.actionSequence = input.substring(i + 1).toCharArray();
-                new Room(0, 0, 5, 5, output);
-                // generateWorld();
+                generateWorld();
                 break;
             case 'L':
                 // load()
@@ -90,7 +84,7 @@ public class Engine {
     }
     public static void main(String[] args) {
         Engine engine = new Engine();
-        String input = "N1S";
+        String input = "N123451S";
         engine.ter.initialize(WIDTH, HEIGHT);
         engine.ter.renderFrame(engine.interactWithInputString(input));
     }
@@ -112,44 +106,92 @@ public class Engine {
     }
 
     /**
-     * Goes to coordinate (x, y) and makes sure that spot is empty. If it is, place a room there with random width and height between 3 and 15
+     * Goes to coordinate (x, y) and makes sure that spot is empty.
+     * If it is, place a room there with random width and height determined by ROOMSIZE
+     * The minimum dimension is 3, unless cut off by edge
      * @param x: x coordinate
      * @param y: y coordinate
      * @return boolean if the room placement was a success or not
      */
     private boolean placeRoom(int x, int y) {
         if (output[x][y].equals(Tileset.NOTHING)) {
-            this.listOfRooms.add(new Room(x, y, this.random.nextInt(12)+3, this.random.nextInt(12)+3, output));
+            this.listOfRooms.add(new Room(x, y, this.random.nextInt(ROOMSIZE) + 7,
+                    this.random.nextInt(ROOMSIZE) + 7, output));
             return true;
         } else {
             return false;
         }
     }
+
+    /**
+     * Generates the world by first placing a random number(between 3 and the total area / 300 + 3)
+     * of rooms at random spots. It then repeatedly calls connectRoom() on two randomly selected rooms
+     * until all the rooms are connected.
+     */
     private void generateWorld() {
-        int numOfRooms = this.random.nextInt(WIDTH * HEIGHT / 300)+3;
+        int numOfRooms = this.random.nextInt(WIDTH * HEIGHT / RATIO) + 5;
         while (numOfRooms > 0) {
-            if (placeRoom(this.random.nextInt(WIDTH-2), this.random.nextInt(HEIGHT-2))) {
-                numOfRooms --;
+            if (placeRoom(this.random.nextInt(WIDTH - 6), this.random.nextInt(HEIGHT - 6))) {
+                numOfRooms--;
             }
         }
-    }
-    private void connectRooms(Room r1, Room r2) {
-        Point r1Point = r1.getRandomPoint(random);
-        Point r2Point = r2.getRandomPoint(random);
-        Point diff = new Point(r1Point.getX() - r2Point.getX(), r1Point.getY() - r2Point.getY());
-        for (int i = 0; i < Math.abs(diff.getX()) + 1; i++) {
-            drawHallwayTile(r1Point.getX(), r1Point.getY());
+        this.disjointSet = new WeightedQuickUnionUF(listOfRooms.size());
+        while (!allRoomsConnected()) {
+            int r1 = this.random.nextInt(listOfRooms.size());
+            int r2 = this.random.nextInt(listOfRooms.size());
+            if (r1 == r2 || disjointSet.connected(r1, r2)) {
+                continue;
+            }
+            connectRooms(r1, r2);
         }
     }
+
+    /**
+     * Takes two indexes of listOfRooms, selects random points in the rooms' bounding box,
+     * and draws a line connecting those two points.
+     * @param r1: index of room 1
+     * @param r2: index of room 2
+     */
+    private void connectRooms(int r1, int r2) {
+        this.disjointSet.union(r1, r2);
+        Point r1Point = listOfRooms.get(r1).getRandomPoint(random);
+        Point r2Point = listOfRooms.get(r2).getRandomPoint(random);
+        Point diff = new Point(r2Point.getX() - r1Point.getX(), r2Point.getY() - r1Point.getY());
+        for (int i = 0; i < Math.abs(diff.getX()) + 1; i++) {
+            drawHallwayTile((diff.getX() > 0) ? r1Point.getX() + i : r1Point.getX() - i, r1Point.getY());
+        }
+        for (int i = 0; i < Math.abs(diff.getY()) + 1; i++) {
+            drawHallwayTile(r2Point.getX(), (diff.getY() > 0) ? r1Point.getY() + i : r1Point.getY() - i);
+        }
+    }
+
+    /**
+     * Draws one tile of the hallway, and surrounds it with walls if able
+     * @param x: x position of tile
+     * @param y: y position of tile
+     */
     private void drawHallwayTile(int x, int y) {
         placeTile(x, y, FLOOR);
-        placeTile(x+1, y+1, WALL);
-        placeTile(x-1, y-1, WALL);
-        placeTile(x+1, y-1, WALL);
-        placeTile(x-1, y+1, WALL);
-        placeTile(x+1, y, WALL);
-        placeTile(x-1, y, WALL);
-        placeTile(x, y-1, WALL);
-        placeTile(x, y+1, WALL);
+        placeTile(x + 1, y + 1, WALL);
+        placeTile(x - 1, y - 1, WALL);
+        placeTile(x + 1, y - 1, WALL);
+        placeTile(x - 1, y + 1, WALL);
+        placeTile(x + 1, y, WALL);
+        placeTile(x - 1, y, WALL);
+        placeTile(x, y - 1, WALL);
+        placeTile(x, y + 1, WALL);
+    }
+
+    /**
+     * Checks if all rooms are connected
+     * @return true if they are, false otherwise
+     */
+    private boolean allRoomsConnected() {
+        for (int i = 1; i < this.listOfRooms.size(); i++) {
+            if (!disjointSet.connected(0, i)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

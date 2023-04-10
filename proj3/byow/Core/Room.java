@@ -28,8 +28,8 @@ public class Room {
         this.spot = new Point(x, y);
     }
     public Point getRandomPoint(Random rand) {
-        int x = rand.nextInt(this.width-1) + spot.getX();
-        int y = rand.nextInt(this.height-1) + spot.getY();
+        int x = rand.nextInt(this.width - 3) + spot.getX() + 1;
+        int y = rand.nextInt(this.height - 3) + spot.getY() + 1;
         return new Point(x, y);
     }
 }
