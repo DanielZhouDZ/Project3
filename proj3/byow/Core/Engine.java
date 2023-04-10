@@ -22,8 +22,8 @@ public class Engine {
     private WeightedQuickUnionUF disjointSet;
     public static final TETile FLOOR = Tileset.FLOOR;
     public static final TETile WALL = Tileset.WALL;
-    private static final int RATIO = 300;
-    private static final int ROOMSIZE = 8;
+    private static final int RATIO = 175;
+    private static final int ROOMSIZE = 5;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -71,7 +71,11 @@ public class Engine {
                 }
                 seed = Long.parseLong(input.substring(1, i));
                 this.random = new Random(seed);
-                this.actionSequence = input.substring(i + 1).toCharArray();
+                int j = i;
+                while (j < input.length() && input.charAt(j) != ':') {
+                    j++;
+                }
+                this.actionSequence = input.substring(i + 1, j).toCharArray();
                 generateWorld();
                 break;
             case 'L':
@@ -84,7 +88,8 @@ public class Engine {
     }
     public static void main(String[] args) {
         Engine engine = new Engine();
-        String input = "N123451S";
+        Random r = new Random();
+        String input = "N" + r.nextInt(10000000) + "S";
         engine.ter.initialize(WIDTH, HEIGHT);
         engine.ter.renderFrame(engine.interactWithInputString(input));
     }
@@ -115,8 +120,8 @@ public class Engine {
      */
     private boolean placeRoom(int x, int y) {
         if (output[x][y].equals(Tileset.NOTHING)) {
-            this.listOfRooms.add(new Room(x, y, this.random.nextInt(ROOMSIZE) + 7,
-                    this.random.nextInt(ROOMSIZE) + 7, output));
+            this.listOfRooms.add(new Room(x, y, this.random.nextInt(ROOMSIZE) + 5,
+                    this.random.nextInt(ROOMSIZE) + 5, output));
             return true;
         } else {
             return false;
@@ -137,13 +142,19 @@ public class Engine {
         }
         this.disjointSet = new WeightedQuickUnionUF(listOfRooms.size());
         while (!allRoomsConnected()) {
-            int r1 = this.random.nextInt(listOfRooms.size());
-            int r2 = this.random.nextInt(listOfRooms.size());
-            if (r1 == r2 || disjointSet.connected(r1, r2)) {
-                continue;
-            }
-            connectRooms(r1, r2);
+            randomlyConnectRooms();
         }
+        for (int i = 0; i < random.nextInt(5); i++) {
+            randomlyConnectRooms();
+        }
+    }
+    public void randomlyConnectRooms() {
+        int r1 = this.random.nextInt(listOfRooms.size());
+        int r2 = this.random.nextInt(listOfRooms.size());
+        if (r1 == r2 || disjointSet.connected(r1, r2)) {
+            return;
+        }
+        connectRooms(r1, r2);
     }
 
     /**
