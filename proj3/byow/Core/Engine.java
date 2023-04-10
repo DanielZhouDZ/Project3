@@ -14,7 +14,7 @@ public class Engine {
     TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
     public static final int WIDTH = 80;
-    public static final int HEIGHT = 30;
+    public static final int HEIGHT = 40;
     private Random random;
     private char[] actionSequence;
     private TETile[][] output;
@@ -22,8 +22,8 @@ public class Engine {
     private WeightedQuickUnionUF disjointSet;
     public static final TETile FLOOR = Tileset.FLOOR;
     public static final TETile WALL = Tileset.WALL;
-    private static final int RATIO = 175;
-    private static final int ROOMSIZE = 5;
+    private static final int RATIO = 300;
+    private static final int ROOMSIZE = 7;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -120,8 +120,8 @@ public class Engine {
      */
     private boolean placeRoom(int x, int y) {
         if (output[x][y].equals(Tileset.NOTHING)) {
-            this.listOfRooms.add(new Room(x, y, this.random.nextInt(ROOMSIZE) + 5,
-                    this.random.nextInt(ROOMSIZE) + 5, output));
+            this.listOfRooms.add(new Room(x, y, this.random.nextInt(ROOMSIZE) + 7,
+                    this.random.nextInt(ROOMSIZE) + 7, output));
             return true;
         } else {
             return false;
@@ -134,9 +134,9 @@ public class Engine {
      * until all the rooms are connected.
      */
     private void generateWorld() {
-        int numOfRooms = this.random.nextInt(WIDTH * HEIGHT / RATIO) + 5;
+        int numOfRooms = this.random.nextInt(WIDTH * HEIGHT / RATIO) + 2;
         while (numOfRooms > 0) {
-            if (placeRoom(this.random.nextInt(WIDTH - 6), this.random.nextInt(HEIGHT - 6))) {
+            if (placeRoom(this.random.nextInt(WIDTH - 4), this.random.nextInt(HEIGHT - 4))) {
                 numOfRooms--;
             }
         }
@@ -144,7 +144,7 @@ public class Engine {
         while (!allRoomsConnected()) {
             randomlyConnectRooms();
         }
-        for (int i = 0; i < random.nextInt(5); i++) {
+        for (int i = 0; i < random.nextInt(8); i++) {
             randomlyConnectRooms();
         }
     }
@@ -168,11 +168,18 @@ public class Engine {
         Point r1Point = listOfRooms.get(r1).getRandomPoint(random);
         Point r2Point = listOfRooms.get(r2).getRandomPoint(random);
         Point diff = new Point(r2Point.getX() - r1Point.getX(), r2Point.getY() - r1Point.getY());
+        int modX = (diff.getX() > 0) ? 1 : -1;
+        int modY = (diff.getY() > 0) ? 1 : -1;
         for (int i = 0; i < Math.abs(diff.getX()) + 1; i++) {
-            drawHallwayTile((diff.getX() > 0) ? r1Point.getX() + i : r1Point.getX() - i, r1Point.getY());
+            drawHallwayTile(r1Point.getX() + i * modX, r1Point.getY());
+            if (diff.getY() != 0 && random.nextInt(4) == 0) {
+                drawHallwayTile(r1Point.getX()+ i * modX, r1Point.getY() + modY);
+                diff.changeY(modY);
+                r1Point.changeY(-modY);
+            }
         }
         for (int i = 0; i < Math.abs(diff.getY()) + 1; i++) {
-            drawHallwayTile(r2Point.getX(), (diff.getY() > 0) ? r1Point.getY() + i : r1Point.getY() - i);
+            drawHallwayTile(r2Point.getX(), r1Point.getY() + i * modY);
         }
     }
 

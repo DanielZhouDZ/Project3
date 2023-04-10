@@ -13,6 +13,12 @@ public class Point {
     public int getY() {
         return this.y;
     }
+    public void changeX(int change) {
+        this.x = x - change;
+    }
+    public void changeY(int change) {
+        this.y = y - change;
+    }
     @Override
     public String toString() {
         return this.x + ", " + this.y;
