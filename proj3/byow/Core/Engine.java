@@ -20,6 +20,8 @@ public class Engine {
     private TETile[][] output;
     private List<Room> listOfRooms;
     private WeightedQuickUnionUF disjointSet;
+    public static final TETile FLOOR = Tileset.FLOOR;
+    public static final TETile WALL = Tileset.WALL;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -75,6 +77,8 @@ public class Engine {
                 seed = Long.parseLong(input.substring(1, i));
                 this.random = new Random(seed);
                 this.actionSequence = input.substring(i + 1).toCharArray();
+                new Room(0, 0, 5, 5, output);
+                // generateWorld();
                 break;
             case 'L':
                 // load()
@@ -89,5 +93,63 @@ public class Engine {
         String input = "N1S";
         engine.ter.initialize(WIDTH, HEIGHT);
         engine.ter.renderFrame(engine.interactWithInputString(input));
+    }
+
+    /**
+     * Performs checks to see if tile can be placed at location, placing tile if allowed
+     * @param x: x coordinate
+     * @param y: y coordinate
+     * @param tile: tile to be placed
+     */
+    private void placeTile(int x, int y, TETile tile) {
+        if (0 <= x && x < output.length && 0 <= y && y < output[0].length) {
+            if (tile == FLOOR) {
+                output[x][y] = tile;
+            } else if (output[x][y] != FLOOR) {
+                output[x][y] = tile;
+            }
+        }
+    }
+
+    /**
+     * Goes to coordinate (x, y) and makes sure that spot is empty. If it is, place a room there with random width and height between 3 and 15
+     * @param x: x coordinate
+     * @param y: y coordinate
+     * @return boolean if the room placement was a success or not
+     */
+    private boolean placeRoom(int x, int y) {
+        if (output[x][y].equals(Tileset.NOTHING)) {
+            this.listOfRooms.add(new Room(x, y, this.random.nextInt(12)+3, this.random.nextInt(12)+3, output));
+            return true;
+        } else {
+            return false;
+        }
+    }
+    private void generateWorld() {
+        int numOfRooms = this.random.nextInt(WIDTH * HEIGHT / 300)+3;
+        while (numOfRooms > 0) {
+            if (placeRoom(this.random.nextInt(WIDTH-2), this.random.nextInt(HEIGHT-2))) {
+                numOfRooms --;
+            }
+        }
+    }
+    private void connectRooms(Room r1, Room r2) {
+        Point r1Point = r1.getRandomPoint(random);
+        Point r2Point = r2.getRandomPoint(random);
+        Point diff = new Point(r1Point.getX() - r2Point.getX(), r1Point.getY() - r2Point.getY());
+        for (int i = 0; i < Math.abs(diff.getX()) + 1; i++) {
+            drawHallwayTile(r1Point.getX(), r1Point.getY());
+        }
+    }
+    private void drawHallwayTile(int x, int y) {
+        placeTile(x, y, FLOOR);
+        placeTile(x+1, y+1, WALL);
+        placeTile(x-1, y-1, WALL);
+        placeTile(x+1, y-1, WALL);
+        placeTile(x-1, y+1, WALL);
+        placeTile(x+1, y, WALL);
+        placeTile(x-1, y, WALL);
+        placeTile(x, y-1, WALL);
+        placeTile(x, y+1, WALL);
     }
 }

@@ -13,4 +13,8 @@ public class Point {
     public int getY() {
         return this.y;
     }
+    @Override
+    public String toString() {
+        return this.x + ", " + this.y;
+    }
 }
