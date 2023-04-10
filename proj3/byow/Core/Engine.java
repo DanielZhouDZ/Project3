@@ -49,4 +49,12 @@ public class Engine {
         TETile[][] finalWorldFrame = null;
         return finalWorldFrame;
     }
+    public static void main(String[] args) {
+        Engine engine = new Engine();
+        String input = "";
+        int width = 1;
+        int height = 1;
+        engine.ter.initialize(width, height);
+        engine.ter.renderFrame(engine.interactWithInputString(input));
+    }
 }
