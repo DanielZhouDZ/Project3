@@ -22,8 +22,8 @@ public class Engine {
     private WeightedQuickUnionUF disjointSet;
     public static final TETile FLOOR = Tileset.FLOOR;
     public static final TETile WALL = Tileset.WALL;
-    private static final int RATIO = 200;
-    private static final int ROOMSIZE = 6;
+    private static final int RATIO = 300;
+    private static final int ROOMSIZE = 8;
     private static final int RANDOM = 10000;
 
     /**
@@ -120,9 +120,12 @@ public class Engine {
      * @return boolean if the room placement was a success or not
      */
     private boolean placeRoom(int x, int y) {
-        if (output[x][y].equals(Tileset.NOTHING)) {
-            this.listOfRooms.add(new Room(x, y, this.random.nextInt(ROOMSIZE) + 7,
-                    this.random.nextInt(ROOMSIZE) + 7, output));
+        int height = this.random.nextInt(ROOMSIZE) + 5;
+        int width = this.random.nextInt(ROOMSIZE) + 5;
+        if (output[x][y].equals(Tileset.NOTHING) && output[Math.min(x + width, output.length - 1)]
+                [Math.min(y + height, output[0].length - 1)].equals(Tileset.NOTHING)) {
+            this.listOfRooms.add(new Room(x, y, width,
+                    height, output));
             return true;
         } else {
             return false;
@@ -135,7 +138,7 @@ public class Engine {
      * until all the rooms are connected.
      */
     private void generateWorld() {
-        int numOfRooms = this.random.nextInt(WIDTH * HEIGHT / RATIO) + 2;
+        int numOfRooms = this.random.nextInt(WIDTH * HEIGHT / RATIO) + 4;
         while (numOfRooms > 0) {
             if (placeRoom(this.random.nextInt(WIDTH - 4), this.random.nextInt(HEIGHT - 4))) {
                 numOfRooms--;
@@ -173,7 +176,7 @@ public class Engine {
         int modY = (diff.getY() > 0) ? 1 : -1;
         for (int i = 0; i < Math.abs(diff.getX()) + 1; i++) {
             drawHallwayTile(r1Point.getX() + i * modX, r1Point.getY());
-            if (diff.getY() != 0 && random.nextInt(4) == 0) {
+            if (diff.getY() != 0 && random.nextInt(9) == 0) {
                 drawHallwayTile(r1Point.getX() + i * modX, r1Point.getY() + modY);
                 diff.changeY(modY);
                 r1Point.changeY(-modY);
