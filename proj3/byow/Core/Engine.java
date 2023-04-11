@@ -22,8 +22,8 @@ public class Engine {
     private WeightedQuickUnionUF disjointSet;
     public static final TETile FLOOR = Tileset.FLOOR;
     public static final TETile WALL = Tileset.WALL;
-    private static final int RATIO = 125;
-    private static final int ROOMSIZE = 6;
+    private static final int RATIO = 175;
+    private static final int ROOMSIZE = 8;
     private static final int RANDOM = 10000;
 
     /**
@@ -122,8 +122,12 @@ public class Engine {
     private boolean placeRoom(int x, int y) {
         int height = this.random.nextInt(ROOMSIZE) + 5;
         int width = this.random.nextInt(ROOMSIZE) + 5;
-        if (output[x][y].equals(Tileset.NOTHING) && output[Math.min(x + width, output.length - 1)]
-                [Math.min(y + height, output[0].length - 1)].equals(Tileset.NOTHING)) {
+        int endWidth = Math.min(x + width, output.length - 1);
+        int endHeight = Math.min(y + height, output[0].length - 1);
+        if (output[x][y].equals(Tileset.NOTHING) && output[endWidth][endHeight].equals(Tileset.NOTHING)
+                && output[(x + endWidth) / 2][(y + endHeight) / 2].equals(Tileset.NOTHING)
+                && output[endWidth][y].equals(Tileset.NOTHING)
+                && output[x][endHeight].equals(Tileset.NOTHING)) {
             Room r = new Room(x, y, width,
                     height, output, this.listOfRooms.size());
             for (Room room : listOfRooms) {
