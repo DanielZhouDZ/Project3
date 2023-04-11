@@ -22,8 +22,8 @@ public class Engine {
     private WeightedQuickUnionUF disjointSet;
     public static final TETile FLOOR = Tileset.FLOOR;
     public static final TETile WALL = Tileset.WALL;
-    private static final int RATIO = 300;
-    private static final int ROOMSIZE = 8;
+    private static final int RATIO = 125;
+    private static final int ROOMSIZE = 6;
     private static final int RANDOM = 10000;
 
     /**
@@ -37,7 +37,7 @@ public class Engine {
      * Method used for autograding and testing your code. The input string will be a series
      * of characters (for example, "n123sswwdasdassadwas", "n123sss:q", "lwww". The engine should
      * behave exactly as if the user typed these characters into the engine using
-     * interactWithKeyboard.
+     * interactWithKeyboard.)
      *
      * Recall that strings ending in ":q" should cause the game to quite save. For example,
      * if we do interactWithInputString("n123sss:q"), we expect the game to run the first
@@ -57,7 +57,7 @@ public class Engine {
     public TETile[][] interactWithInputString(String input) {
         input = input.toUpperCase();
         listOfRooms = new ArrayList<>();
-        long seed = 0;
+        long seed;
         this.output = new TETile[WIDTH][HEIGHT];
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++) {
@@ -124,8 +124,12 @@ public class Engine {
         int width = this.random.nextInt(ROOMSIZE) + 5;
         if (output[x][y].equals(Tileset.NOTHING) && output[Math.min(x + width, output.length - 1)]
                 [Math.min(y + height, output[0].length - 1)].equals(Tileset.NOTHING)) {
-            this.listOfRooms.add(new Room(x, y, width,
-                    height, output));
+            Room r = new Room(x, y, width,
+                    height, output, this.listOfRooms.size());
+            for (Room room : listOfRooms) {
+                room.addRoom(r);
+            }
+            this.listOfRooms.add(r);
             return true;
         } else {
             return false;
@@ -133,12 +137,11 @@ public class Engine {
     }
 
     /**
-     * Generates the world by first placing a random number(between 3 and the total area / 300 + 3)
-     * of rooms at random spots. It then repeatedly calls connectRoom() on two randomly selected rooms
-     * until all the rooms are connected.
+     * Generates the world by first placing a random number(between 8 and the total area / 125 + 8)
+     * of rooms at random spots. It then repeatedly calls randomlyConnectRooms() until all rooms are connected
      */
     private void generateWorld() {
-        int numOfRooms = this.random.nextInt(WIDTH * HEIGHT / RATIO) + 4;
+        int numOfRooms = this.random.nextInt(WIDTH * HEIGHT / RATIO) + 8;
         while (numOfRooms > 0) {
             if (placeRoom(this.random.nextInt(WIDTH - 4), this.random.nextInt(HEIGHT - 4))) {
                 numOfRooms--;
@@ -148,17 +151,21 @@ public class Engine {
         while (!allRoomsConnected()) {
             randomlyConnectRooms();
         }
-        for (int i = 0; i < random.nextInt(8); i++) {
+        for (int i = 0; i < random.nextInt(4); i++) {
             randomlyConnectRooms();
         }
     }
+
+    /**
+     * Randomly selects a room, then connects it with the room closest to it.
+     */
     public void randomlyConnectRooms() {
         int r1 = this.random.nextInt(listOfRooms.size());
-        int r2 = this.random.nextInt(listOfRooms.size());
-        if (r1 == r2 || disjointSet.connected(r1, r2)) {
+        Room r2 = this.listOfRooms.get(r1).getClosestRoom();
+        if (r2 == null || this.disjointSet.connected(r1, r2.getIndex())) {
             return;
         }
-        connectRooms(r1, r2);
+        connectRooms(r1, r2.getIndex());
     }
 
     /**
