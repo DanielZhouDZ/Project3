@@ -22,8 +22,9 @@ public class Engine {
     private WeightedQuickUnionUF disjointSet;
     public static final TETile FLOOR = Tileset.FLOOR;
     public static final TETile WALL = Tileset.WALL;
-    private static final int RATIO = 300;
-    private static final int ROOMSIZE = 7;
+    private static final int RATIO = 200;
+    private static final int ROOMSIZE = 6;
+    private static final int RANDOM = 10000;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
@@ -89,7 +90,7 @@ public class Engine {
     public static void main(String[] args) {
         Engine engine = new Engine();
         Random r = new Random();
-        String input = "N" + r.nextInt(10000000) + "S";
+        String input = "N" + r.nextInt(RANDOM) + "S";
         engine.ter.initialize(WIDTH, HEIGHT);
         engine.ter.renderFrame(engine.interactWithInputString(input));
     }
@@ -173,7 +174,7 @@ public class Engine {
         for (int i = 0; i < Math.abs(diff.getX()) + 1; i++) {
             drawHallwayTile(r1Point.getX() + i * modX, r1Point.getY());
             if (diff.getY() != 0 && random.nextInt(4) == 0) {
-                drawHallwayTile(r1Point.getX()+ i * modX, r1Point.getY() + modY);
+                drawHallwayTile(r1Point.getX() + i * modX, r1Point.getY() + modY);
                 diff.changeY(modY);
                 r1Point.changeY(-modY);
             }
