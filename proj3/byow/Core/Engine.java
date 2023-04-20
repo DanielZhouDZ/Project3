@@ -8,17 +8,13 @@ import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 import java.awt.*;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
 import static java.lang.Character.isDigit;
-import static java.lang.System.exit;
 
 public class Engine {
     TERenderer ter = new TERenderer();
@@ -36,6 +32,10 @@ public class Engine {
     private static final int RATIO = 175;
     private static final int ROOMSIZE = 8;
     private static final int RANDOM = 10000;
+
+    private static final int SMALLFONTSIZE = 20;
+    private static final int LARGEFONTSIZE = 30;
+    private static final int CANVANSRATIO = 16;
 
     private Point avatarPosition;
 
@@ -127,23 +127,23 @@ public class Engine {
                 }
             }
             engine.ter.renderFrame(this.myWorld);
-            HUD();
+            headUpDisplay();
 
         }
 
         System.exit(0);
     }
 
-    private void HUD() {
+    private void headUpDisplay() {
         StdDraw.setPenColor(Color.WHITE);
-        Font fontSmall = new Font("Monaco", Font.PLAIN, 20);
+        Font fontSmall = new Font("Monaco", Font.PLAIN, SMALLFONTSIZE);
         StdDraw.setFont(fontSmall);
         StdDraw.textLeft(2, 2, "NOTHING");
     }
 
     private void displayStartScreen() {
-        StdDraw.setCanvasSize(WIDTH * 16, HEIGHT * 16);
-        StdDraw.setXscale(0, WIDTH );
+        StdDraw.setCanvasSize(WIDTH * CANVANSRATIO, HEIGHT * CANVANSRATIO);
+        StdDraw.setXscale(0, WIDTH);
         StdDraw.setYscale(0, HEIGHT);
         StdDraw.clear(Color.BLACK);
 
@@ -152,11 +152,11 @@ public class Engine {
 
     private void drawMenu() {
         StdDraw.setPenColor(Color.WHITE);
-        Font fontBig = new Font("Monaco", Font.BOLD, 30);
+        Font fontBig = new Font("Monaco", Font.BOLD, LARGEFONTSIZE);
         StdDraw.setFont(fontBig);
-        StdDraw.text(WIDTH / 2, HEIGHT /2 + 7, "CS61B: THE GAME");
+        StdDraw.text(WIDTH / 2, HEIGHT / 2 + 7, "CS61B: THE GAME");
 
-        Font fontSmall = new Font("Monaco", Font.PLAIN, 20);
+        Font fontSmall = new Font("Monaco", Font.PLAIN, SMALLFONTSIZE);
         StdDraw.setFont(fontSmall);
         StdDraw.text(WIDTH / 2, HEIGHT / 2, "New Game (N)");
         StdDraw.text(WIDTH / 2, HEIGHT / 2 - 2, "Load Game (L)");
@@ -170,11 +170,11 @@ public class Engine {
             Scanner sc = new Scanner(data);
 
             if (sc.hasNextLine()) {
-                String seed = sc.nextLine();
-                if (seed.length() == 0) {
+                String firstLine = sc.nextLine();
+                if (firstLine.length() == 0) {
                     System.exit(0);
                 }
-                this.seed = Long.parseLong(seed);
+                this.seed = Long.parseLong(firstLine);
             } else {
                 System.exit(0);
             }
@@ -209,7 +209,6 @@ public class Engine {
                     StdDraw.text(WIDTH / 2, HEIGHT / 2 - 7, "Enter Seed:");
                     StdDraw.setPenColor(Color.WHITE);
                     StdDraw.text(WIDTH / 2, HEIGHT / 2 - 9, typed);
-
                 }
             }
         }
@@ -230,7 +229,7 @@ public class Engine {
             bw.newLine();
 
             bw.close();
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println("Error occurred while saving game data");
         }
     }
@@ -252,7 +251,7 @@ public class Engine {
     }
 
     private void moveAvatarTo(int x, int y) {
-        if (x >= 0 && x < myWorld.length && y >= 0 && y < myWorld[0].length && myWorld[x][y] != WALL ) {
+        if (x >= 0 && x < myWorld.length && y >= 0 && y < myWorld[0].length && myWorld[x][y] != WALL) {
             myWorld[avatarPosition.getX()][avatarPosition.getY()] = FLOOR;
             myWorld[x][y] = AVATAR;
             avatarPosition.setX(x);
@@ -283,18 +282,6 @@ public class Engine {
      */
     public TETile[][] interactWithInputString(String input) {
         input = input.toUpperCase();
-
-        /*
-        listOfRooms = new ArrayList<>();
-
-        this.myWorld = new TETile[WIDTH][HEIGHT];
-        for (int i = 0; i < WIDTH; i++) {
-            for (int j = 0; j < HEIGHT; j++) {
-                myWorld[i][j] = Tileset.NOTHING;
-            }
-        }
-
-         */
 
         switch (input.charAt(0)) {
             case 'N':
@@ -333,20 +320,6 @@ public class Engine {
                 engine.ter.renderFrame(this.myWorld);
                 break;
 
-
-                /*
-                this.random = new Random(seed);
-                int j = i;
-                while (j < input.length() && input.charAt(j) != ':') {
-                    j++;
-                }
-                this.actionSequence = input.substring(i + 1, j).toCharArray();
-                generateWorld();
-                break;
-
-                 */
-
-
             case 'L':
                 // load()
                 loadGameData();
@@ -378,7 +351,6 @@ public class Engine {
                 engine.ter.renderFrame(this.myWorld);
                 break;
             default:
-                //System.exit(0);
                 break;
         }
         return myWorld;
