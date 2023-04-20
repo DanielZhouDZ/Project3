@@ -67,7 +67,7 @@ public class Room {
      * Adds a room to the priority queue
      * @param r: room to be added
      */
-    public void addRoom(Room r) {
+    public void addToClosestRooms(Room r) {
         this.closestRooms.offer(r);
     }
 
@@ -77,5 +77,13 @@ public class Room {
      */
     public int getIndex() {
         return index;
+    }
+
+    public Point getCenter() {
+        int x_middle = getSpot().getX() + width / 2;
+        int y_middle = getSpot().getY() + height / 2;
+        Point center = new Point(x_middle, y_middle);
+
+        return center;
     }
 }

@@ -36,3 +36,13 @@ to draw hallways between this room and the room closest to it
 ## Persistence
 To save the file, we'll write the current seed, plus any inputs made by the player, to a file.
 <br>To load the file, we'll just regenerate the world based on the seed, then reenact all the inputs
+
+## Phase 2
+- [x] Player with avatar, input control
+- [ ] Save/persistence
+  - [ ] When the player enters :Q, quit and save
+  - [ ] When the player presses L, the world should load from save
+    - If no previous save, quit with no errors
+- [ ] HUD that shows character under mouse
+- [ ] Modify interactWithInputString() to handle movement, saving, and loading
+- [ ] Ambition Score

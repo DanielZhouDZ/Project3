@@ -4,11 +4,21 @@ import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 
+import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
+import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
+
+import static java.lang.Character.isDigit;
+import static java.lang.System.exit;
 
 public class Engine {
     TERenderer ter = new TERenderer();
@@ -17,20 +27,237 @@ public class Engine {
     public static final int HEIGHT = 40;
     private Random random;
     private char[] actionSequence;
-    private TETile[][] output;
+    private TETile[][] myWorld;
     private List<Room> listOfRooms;
     private WeightedQuickUnionUF disjointSet;
     public static final TETile FLOOR = Tileset.FLOOR;
     public static final TETile WALL = Tileset.WALL;
+    public static final TETile AVATAR = Tileset.AVATAR;
     private static final int RATIO = 175;
     private static final int ROOMSIZE = 8;
     private static final int RANDOM = 10000;
+
+    private Point avatarPosition;
+
+    private List<Character> keyActions;
+
+    private long seed;
+
+    private String savedActions;
+
+    private Engine engine;
 
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+        displayStartScreen();
+
+        this.keyActions = null;
+
+        while (true) {
+            if (StdDraw.hasNextKeyTyped()) {
+                char ch = StdDraw.nextKeyTyped();
+                if (ch == 'N' || ch == 'n') {
+                    enterSeedScreen();
+                    drawWorld();
+                    playGame();
+                } else if (ch == 'L' || ch == 'l') {
+                    loadGameData();
+                    drawWorld();
+                    replayActions();
+                    playGame();
+                } else if (ch == 'Q' || ch == 'q') {
+                    System.exit(0);
+                }
+            }
+        }
+    }
+
+    private void drawWorld() {
+        this.engine = new Engine();
+
+        this.listOfRooms = new ArrayList<>();
+        this.keyActions = new ArrayList<>();
+
+        this.myWorld = new TETile[WIDTH][HEIGHT];
+        for (int i = 0; i < WIDTH; i++) {
+            for (int j = 0; j < HEIGHT; j++) {
+                myWorld[i][j] = Tileset.NOTHING;
+            }
+        }
+
+        this.random = new Random(seed);
+        generateWorld();
+        engine.ter.initialize(WIDTH, HEIGHT);
+
+        spawnAvatar();
+
+        engine.ter.renderFrame(this.myWorld);
+    }
+
+    private void replayActions() {
+        for (int i = 0; i < this.savedActions.length(); i++) {
+            moveAvatar(this.savedActions.charAt(i));
+        }
+    }
+
+    private void playGame() {
+        boolean colonTyped = false;
+        boolean gameOver = false;
+
+        while (!gameOver) {
+            if (StdDraw.hasNextKeyTyped()) {
+                char ch = StdDraw.nextKeyTyped();
+                if (ch == ':') {
+                    colonTyped = true;
+                    continue;
+                }
+
+                if (colonTyped) {
+                    if (ch == 'Q' || ch == 'q') {
+                        saveGame();
+                        gameOver = true;
+                    } else {
+                        colonTyped = false;
+                    }
+                } else {
+                    moveAvatar(ch);
+                }
+            }
+            engine.ter.renderFrame(this.myWorld);
+            HUD();
+
+        }
+
+        System.exit(0);
+    }
+
+    private void HUD() {
+        StdDraw.setPenColor(Color.WHITE);
+        Font fontSmall = new Font("Monaco", Font.PLAIN, 20);
+        StdDraw.setFont(fontSmall);
+        StdDraw.textLeft(2, 2, "NOTHING");
+    }
+
+    private void displayStartScreen() {
+        StdDraw.setCanvasSize(WIDTH * 16, HEIGHT * 16);
+        StdDraw.setXscale(0, WIDTH );
+        StdDraw.setYscale(0, HEIGHT);
+        StdDraw.clear(Color.BLACK);
+
+        drawMenu();
+    }
+
+    private void drawMenu() {
+        StdDraw.setPenColor(Color.WHITE);
+        Font fontBig = new Font("Monaco", Font.BOLD, 30);
+        StdDraw.setFont(fontBig);
+        StdDraw.text(WIDTH / 2, HEIGHT /2 + 7, "CS61B: THE GAME");
+
+        Font fontSmall = new Font("Monaco", Font.PLAIN, 20);
+        StdDraw.setFont(fontSmall);
+        StdDraw.text(WIDTH / 2, HEIGHT / 2, "New Game (N)");
+        StdDraw.text(WIDTH / 2, HEIGHT / 2 - 2, "Load Game (L)");
+        StdDraw.text(WIDTH / 2, HEIGHT / 2 - 4, "Quit (Q)");
+    }
+
+
+    private void loadGameData() {
+        try {
+            File data = new File("gameData.txt");
+            Scanner sc = new Scanner(data);
+
+            if (sc.hasNextLine()) {
+                String seed = sc.nextLine();
+                if (seed.length() == 0) {
+                    System.exit(0);
+                }
+                this.seed = Long.parseLong(seed);
+            } else {
+                System.exit(0);
+            }
+
+            if (sc.hasNextLine()) {
+                this.savedActions = sc.nextLine();
+            }
+            sc.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred when loading the game");
+            e.printStackTrace();
+        }
+    }
+
+    private void enterSeedScreen() {
+        StdDraw.text(WIDTH / 2, HEIGHT / 2 - 7, "Enter Seed:");
+
+        boolean sEntered = false;
+        String typed = "";
+
+        while (!sEntered) {
+            if (StdDraw.hasNextKeyTyped()) {
+                char key = StdDraw.nextKeyTyped();
+                if (key == 'S' || key == 's') {
+                    this.seed = Long.parseLong(typed);
+                    sEntered = true;
+                }
+                if (isDigit(key)) {
+                    typed = typed + key;
+                    StdDraw.clear(Color.BLACK);
+                    drawMenu();
+                    StdDraw.text(WIDTH / 2, HEIGHT / 2 - 7, "Enter Seed:");
+                    StdDraw.setPenColor(Color.WHITE);
+                    StdDraw.text(WIDTH / 2, HEIGHT / 2 - 9, typed);
+
+                }
+            }
+        }
+    }
+
+    private void saveGame() {
+        try {
+            FileWriter fw = new FileWriter("gameData.txt", false);
+            BufferedWriter bw = new BufferedWriter(fw);
+
+            bw.write(String.valueOf(this.seed));
+            bw.newLine();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < keyActions.size(); i++) {
+                sb.append(keyActions.get(i));
+            }
+            bw.write(sb.toString());
+            bw.newLine();
+
+            bw.close();
+        } catch (Exception e) {
+            System.out.println("Error occurred while saving game data");
+        }
+    }
+
+    private void moveAvatar(char ch) {
+        if (ch == 'W' || ch == 'w') {
+            moveAvatarTo(avatarPosition.getX(), avatarPosition.getY() + 1);
+            keyActions.add('W');
+        } else if (ch == 'A' || ch == 'a') {
+            moveAvatarTo(avatarPosition.getX() - 1, avatarPosition.getY());
+            keyActions.add('A');
+        } else if (ch == 'S' || ch == 's') {
+            moveAvatarTo(avatarPosition.getX(), avatarPosition.getY() - 1);
+            keyActions.add('S');
+        } else if (ch == 'D' || ch == 'd') {
+            moveAvatarTo(avatarPosition.getX() + 1, avatarPosition.getY());
+            keyActions.add('D');
+        }
+    }
+
+    private void moveAvatarTo(int x, int y) {
+        if (x >= 0 && x < myWorld.length && y >= 0 && y < myWorld[0].length && myWorld[x][y] != WALL ) {
+            myWorld[avatarPosition.getX()][avatarPosition.getY()] = FLOOR;
+            myWorld[x][y] = AVATAR;
+            avatarPosition.setX(x);
+            avatarPosition.setY(y);
+        }
     }
 
     /**
@@ -56,21 +283,57 @@ public class Engine {
      */
     public TETile[][] interactWithInputString(String input) {
         input = input.toUpperCase();
+
+        /*
         listOfRooms = new ArrayList<>();
-        long seed;
-        this.output = new TETile[WIDTH][HEIGHT];
+
+        this.myWorld = new TETile[WIDTH][HEIGHT];
         for (int i = 0; i < WIDTH; i++) {
             for (int j = 0; j < HEIGHT; j++) {
-                output[i][j] = Tileset.NOTHING;
+                myWorld[i][j] = Tileset.NOTHING;
             }
         }
+
+         */
+
         switch (input.charAt(0)) {
             case 'N':
                 int i = 1;
                 while (i < input.length() && input.charAt(i) != 'S') {
                     i++;
                 }
-                seed = Long.parseLong(input.substring(1, i));
+
+                this.seed = Long.parseLong(input.substring(1, i));
+
+                drawWorld();
+
+                boolean colonTyped = false;
+
+                String actions = input.substring(i + 1, input.length());
+                for (int j = 0; j < actions.length(); j++) {
+                    char ch = actions.charAt(j);
+                    if (ch == ':') {
+                        colonTyped = true;
+                        continue;
+                    }
+
+                    if (colonTyped) {
+                        if (ch == 'Q' || ch == 'q') {
+                            saveGame();
+                            System.exit(0);
+                        } else {
+                            colonTyped = false;
+                        }
+                    } else {
+                        moveAvatar(ch);
+                    }
+
+                }
+                engine.ter.renderFrame(this.myWorld);
+                break;
+
+
+                /*
                 this.random = new Random(seed);
                 int j = i;
                 while (j < input.length() && input.charAt(j) != ':') {
@@ -79,20 +342,55 @@ public class Engine {
                 this.actionSequence = input.substring(i + 1, j).toCharArray();
                 generateWorld();
                 break;
+
+                 */
+
+
             case 'L':
                 // load()
+                loadGameData();
+                drawWorld();
+                replayActions();
+
+                int k = 1;
+                boolean colonTyped2 = false;
+
+                String actions2 = input.substring(k, input.length());
+                for (int j = 0; j < actions2.length(); j++) {
+                    char ch = actions2.charAt(j);
+                    if (ch == ':') {
+                        colonTyped2 = true;
+                        continue;
+                    }
+
+                    if (colonTyped2) {
+                        if (ch == 'Q' || ch == 'q') {
+                            saveGame();
+                            System.exit(0);
+                        } else {
+                            colonTyped2 = false;
+                        }
+                    } else {
+                        moveAvatar(ch);
+                    }
+                }
+                engine.ter.renderFrame(this.myWorld);
                 break;
             default:
-                // quit()
+                System.exit(0);
+                break;
         }
-        return output;
+        return myWorld;
     }
+
+
     public static void main(String[] args) {
         Engine engine = new Engine();
         Random r = new Random();
         String input = "N" + r.nextInt(RANDOM) + "S";
         engine.ter.initialize(WIDTH, HEIGHT);
-        engine.ter.renderFrame(engine.interactWithInputString(input));
+        //engine.ter.renderFrame(engine.interactWithInputString(input));
+        engine.ter.renderFrame(engine.interactWithInputString("N123S"));
     }
 
     /**
@@ -102,11 +400,11 @@ public class Engine {
      * @param tile: tile to be placed
      */
     private void placeTile(int x, int y, TETile tile) {
-        if (0 <= x && x < output.length && 0 <= y && y < output[0].length) {
+        if (0 <= x && x < myWorld.length && 0 <= y && y < myWorld[0].length) {
             if (tile == FLOOR) {
-                output[x][y] = tile;
-            } else if (output[x][y] != FLOOR) {
-                output[x][y] = tile;
+                myWorld[x][y] = tile;
+            } else if (myWorld[x][y] != FLOOR) {
+                myWorld[x][y] = tile;
             }
         }
     }
@@ -122,16 +420,16 @@ public class Engine {
     private boolean placeRoom(int x, int y) {
         int height = this.random.nextInt(ROOMSIZE) + 5;
         int width = this.random.nextInt(ROOMSIZE) + 5;
-        int endWidth = Math.min(x + width, output.length - 1);
-        int endHeight = Math.min(y + height, output[0].length - 1);
-        if (output[x][y].equals(Tileset.NOTHING) && output[endWidth][endHeight].equals(Tileset.NOTHING)
-                && output[(x + endWidth) / 2][(y + endHeight) / 2].equals(Tileset.NOTHING)
-                && output[endWidth][y].equals(Tileset.NOTHING)
-                && output[x][endHeight].equals(Tileset.NOTHING)) {
+        int endWidth = Math.min(x + width, myWorld.length - 1);
+        int endHeight = Math.min(y + height, myWorld[0].length - 1);
+        if (myWorld[x][y].equals(Tileset.NOTHING) && myWorld[endWidth][endHeight].equals(Tileset.NOTHING)
+                && myWorld[(x + endWidth) / 2][(y + endHeight) / 2].equals(Tileset.NOTHING)
+                && myWorld[endWidth][y].equals(Tileset.NOTHING)
+                && myWorld[x][endHeight].equals(Tileset.NOTHING)) {
             Room r = new Room(x, y, width,
-                    height, output, this.listOfRooms.size());
+                    height, myWorld, this.listOfRooms.size());
             for (Room room : listOfRooms) {
-                room.addRoom(r);
+                room.addToClosestRooms(r);
             }
             this.listOfRooms.add(r);
             return true;
@@ -226,5 +524,11 @@ public class Engine {
             }
         }
         return true;
+    }
+
+    private void spawnAvatar() {
+        Room room = listOfRooms.get(0);
+        avatarPosition = new Point(room.getCenter().getX(), room.getCenter().getY());
+        myWorld[avatarPosition.getX()][avatarPosition.getY()] = AVATAR;
     }
 }
