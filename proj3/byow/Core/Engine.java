@@ -320,7 +320,8 @@ public class Engine {
                     if (colonTyped) {
                         if (ch == 'Q' || ch == 'q') {
                             saveGame();
-                            System.exit(0);
+                            break;
+                            //System.exit(0);
                         } else {
                             colonTyped = false;
                         }
@@ -377,7 +378,7 @@ public class Engine {
                 engine.ter.renderFrame(this.myWorld);
                 break;
             default:
-                System.exit(0);
+                //System.exit(0);
                 break;
         }
         return myWorld;
