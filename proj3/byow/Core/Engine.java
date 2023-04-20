@@ -138,7 +138,20 @@ public class Engine {
         StdDraw.setPenColor(Color.WHITE);
         Font fontSmall = new Font("Monaco", Font.PLAIN, SMALLFONTSIZE);
         StdDraw.setFont(fontSmall);
-        StdDraw.textLeft(2, 2, "NOTHING");
+
+        String tileBelow = "";
+        TETile tile = myWorld[(int) StdDraw.mouseX()][(int) StdDraw.mouseY()];
+        if (tile.description() == "you") {
+            tileBelow = "AVATAR";
+        } else if (tile.description() == "wall") {
+            tileBelow = "WALL";
+        } else if (tile.description() == "floor") {
+            tileBelow = "FLOOR";
+        } else if (tile.description() == "nothing") {
+            tileBelow = "NOTHING";
+        }
+
+        StdDraw.textLeft(1, HEIGHT - 2, tileBelow);
         StdDraw.show();
     }
 
