@@ -139,6 +139,7 @@ public class Engine {
         Font fontSmall = new Font("Monaco", Font.PLAIN, SMALLFONTSIZE);
         StdDraw.setFont(fontSmall);
         StdDraw.textLeft(2, 2, "NOTHING");
+        StdDraw.show();
     }
 
     private void displayStartScreen() {
