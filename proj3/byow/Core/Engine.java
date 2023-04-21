@@ -542,11 +542,11 @@ public class Engine {
         TETile pastTile;
         if (this.lit) {
             for (Room r : listOfRooms) {
-                this.past = r.closeLights(avatarPosition, myWorld);
+                this.past = r.closeLights(myWorld);
             }
         } else {
             for (Room r : listOfRooms) {
-                pastTile = r.openLights(avatarPosition, myWorld);
+                pastTile = r.openLights(myWorld);
                 if (pastTile != null) {
                     this.past = pastTile;
                 }

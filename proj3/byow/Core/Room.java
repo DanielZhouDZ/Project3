@@ -22,7 +22,6 @@ public class Room {
     private static final double COLORMULT = 1.5;
     private static final int START = 148;
     private final TETile[][] map;
-
     public Room(int x, int y, int width, int height, TETile[][] map, int index) {
         if (LEVELTOTILES == null) {
             LEVELTOTILES = new HashMap<>();
@@ -129,7 +128,7 @@ public class Room {
             }
         }
     }
-    public TETile openLights(Point playerPT, TETile[][] world) {
+    public TETile openLights(TETile[][] world) {
         TETile output = null;
         for (int i : lights.keySet()) {
             for (Point pt : lights.get(i)) {
@@ -137,7 +136,7 @@ public class Room {
                     output = LEVELTOTILES.get(i);
                 } else if (TILESTOLEVEL.containsKey(world[pt.getX()][pt.getY()])) {
                     world[pt.getX()][pt.getY()] = LEVELTOTILES.
-                            get(Math.min(TILESTOLEVEL.get(world[pt.getX()][pt.getY()]) + i, LIGHTRANGE));
+                            get(Math.max(TILESTOLEVEL.get(world[pt.getX()][pt.getY()]), i));
                 } else {
                     world[pt.getX()][pt.getY()] = LEVELTOTILES.get(i);
                 }
@@ -145,7 +144,7 @@ public class Room {
         }
         return output;
     }
-    public TETile closeLights(Point playerPT, TETile[][] grid) {
+    public TETile closeLights(TETile[][] grid) {
         for (int i : lights.keySet()) {
             for (Point pt : lights.get(i)) {
                 if (grid[pt.getX()][pt.getY()] != Tileset.AVATAR) {
