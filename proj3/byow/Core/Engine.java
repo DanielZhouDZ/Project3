@@ -40,7 +40,7 @@ public class Engine {
     private static final int CANVASRATIO = 16;
     private static final int PAUSETIME = 250;
     private boolean lit;
-    private static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private static final DateTimeFormatter TIMEFORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private Point avatarPosition;
     String tileBelow;
