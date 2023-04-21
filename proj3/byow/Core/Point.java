@@ -1,5 +1,7 @@
 package byow.Core;
 
+import java.util.List;
+
 public class Point {
     private int x;
     private int y;
@@ -30,5 +32,13 @@ public class Point {
     @Override
     public String toString() {
         return this.x + ", " + this.y;
+    }
+    public static boolean pointInList(List<Point> list, int x, int y) {
+        for (Point p : list) {
+            if (p.getY() == y && p.getX() == x) {
+                return true;
+            }
+        }
+        return false;
     }
 }

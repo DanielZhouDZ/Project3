@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import static java.lang.Character.isDigit;
 
 public class Engine {
@@ -31,10 +34,12 @@ public class Engine {
     private static final int RATIO = 175;
     private static final int ROOMSIZE = 8;
     private static final int RANDOM = 10000;
-
+    private TETile past;
     private static final int SMALLFONTSIZE = 20;
     private static final int LARGEFONTSIZE = 30;
     private static final int CANVASRATIO = 16;
+    private static final int PAUSETIME = 250;
+    private boolean lit;
 
     private Point avatarPosition;
     String tileBelow;
@@ -45,11 +50,16 @@ public class Engine {
 
     private String savedActions;
 
+    private DateTimeFormatter timeFormatter;
+
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+        this.timeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        this.lit = false;
+
         displayStartScreen();
 
         this.keyActions = null;
@@ -60,12 +70,11 @@ public class Engine {
                 if (ch == 'N' || ch == 'n') {
                     enterSeedScreen();
                     drawWorld();
-                    playGame();
+                    playGame(false);
                 } else if (ch == 'L' || ch == 'l') {
                     loadGameData();
                     drawWorld();
-                    replayActions();
-                    playGame();
+                    playGame(true);
                 } else if (ch == 'Q' || ch == 'q') {
                     System.exit(0);
                 }
@@ -90,17 +99,27 @@ public class Engine {
         spawnAvatar();
     }
 
-    private void replayActions() {
+    private void replayActions(boolean pause) {
+        ter.renderFrame(this.myWorld);
+        headUpDisplay();
         for (int i = 0; i < this.savedActions.length(); i++) {
             moveAvatar(this.savedActions.charAt(i));
+            if (pause) {
+                ter.renderFrame(this.myWorld);
+                headUpDisplay();
+                StdDraw.pause(PAUSETIME);
+            }
         }
     }
 
-    private void playGame() {
+    private void playGame(boolean replay) {
         boolean colonTyped = false;
         boolean gameOver = false;
 
         ter.initialize(WIDTH, HEIGHT + 2);
+        if (replay) {
+            replayActions(true);
+        }
         while (!gameOver) {
             if (StdDraw.hasNextKeyTyped()) {
                 char ch = StdDraw.nextKeyTyped();
@@ -132,6 +151,8 @@ public class Engine {
         Font fontSmall = new Font("Monaco", Font.PLAIN, SMALLFONTSIZE);
         StdDraw.setFont(fontSmall);
 
+        LocalDateTime currentTime = LocalDateTime.now();
+
         if ((int) StdDraw.mouseX() < WIDTH && (int) StdDraw.mouseY() < HEIGHT) {
             TETile tile = myWorld[(int) StdDraw.mouseX()][(int) StdDraw.mouseY()];
             if (tile.description().equals("you")) {
@@ -142,10 +163,13 @@ public class Engine {
                 tileBelow = "FLOOR";
             } else if (tile.description().equals("nothing")) {
                 tileBelow = "NOTHING";
+            } else {
+                tileBelow = "LIGHT";
             }
         }
         StdDraw.textLeft((float) 1, HEIGHT + 1, tileBelow);
         StdDraw.text((float) WIDTH / 2, HEIGHT + 1, "Seed: " + seed);
+        StdDraw.textRight((float) WIDTH - 1, HEIGHT + 1, "Current Time: " + currentTime.format(timeFormatter));
         StdDraw.show();
     }
 
@@ -205,7 +229,7 @@ public class Engine {
         while (!sEntered) {
             if (StdDraw.hasNextKeyTyped()) {
                 char key = StdDraw.nextKeyTyped();
-                if (key == 'S' || key == 's') {
+                if ((key == 'S' || key == 's') && typed.length() > 0) {
                     this.seed = Long.parseLong(typed);
                     sEntered = true;
                 }
@@ -254,12 +278,16 @@ public class Engine {
         } else if (ch == 'D' || ch == 'd') {
             moveAvatarTo(avatarPosition.getX() + 1, avatarPosition.getY());
             keyActions.add('D');
+        } else if (ch == 'e' || ch == 'E') {
+            toggleLights();
+            keyActions.add('E');
         }
     }
 
     private void moveAvatarTo(int x, int y) {
         if (x >= 0 && x < myWorld.length && y >= 0 && y < myWorld[0].length && myWorld[x][y] != WALL) {
-            myWorld[avatarPosition.getX()][avatarPosition.getY()] = FLOOR;
+            myWorld[avatarPosition.getX()][avatarPosition.getY()] = past;
+            past = myWorld[x][y];
             myWorld[x][y] = AVATAR;
             avatarPosition.setX(x);
             avatarPosition.setY(y);
@@ -330,7 +358,7 @@ public class Engine {
                 // load()
                 loadGameData();
                 drawWorld();
-                replayActions();
+                replayActions(false);
 
                 int k = 1;
                 boolean colonTyped2 = false;
@@ -433,6 +461,9 @@ public class Engine {
         for (int i = 0; i < random.nextInt(4); i++) {
             randomlyConnectRooms();
         }
+        for (Room r : listOfRooms) {
+            r.spawnLight(random);
+        }
     }
 
     /**
@@ -506,6 +537,23 @@ public class Engine {
     private void spawnAvatar() {
         Room room = listOfRooms.get(0);
         avatarPosition = new Point(room.getCenter().getX(), room.getCenter().getY());
+        this.past = myWorld[avatarPosition.getX()][avatarPosition.getY()];
         myWorld[avatarPosition.getX()][avatarPosition.getY()] = AVATAR;
+    }
+    private void toggleLights() {
+        TETile pastTile;
+        if (this.lit) {
+            for (Room r : listOfRooms) {
+                this.past = r.closeLights(avatarPosition, myWorld);
+            }
+        } else {
+            for (Room r : listOfRooms) {
+                pastTile = r.openLights(avatarPosition, myWorld);
+                if (pastTile != null) {
+                    this.past = pastTile;
+                }
+            }
+        }
+        this.lit = !this.lit;
     }
 }
