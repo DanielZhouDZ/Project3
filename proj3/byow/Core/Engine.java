@@ -40,6 +40,7 @@ public class Engine {
     private static final int CANVASRATIO = 16;
     private static final int PAUSETIME = 250;
     private boolean lit;
+    private static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private Point avatarPosition;
     String tileBelow;
@@ -50,14 +51,11 @@ public class Engine {
 
     private String savedActions;
 
-    private DateTimeFormatter timeFormatter;
-
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
-        this.timeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         this.lit = false;
 
         displayStartScreen();
