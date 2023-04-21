@@ -167,7 +167,7 @@ public class Engine {
         }
         StdDraw.textLeft((float) 1, HEIGHT + 1, tileBelow);
         StdDraw.text((float) WIDTH / 2, HEIGHT + 1, "Seed: " + seed);
-        StdDraw.textRight((float) WIDTH - 1, HEIGHT + 1, "Current Time: " + currentTime.format(timeFormatter));
+        StdDraw.textRight((float) WIDTH - 1, HEIGHT + 1, "Current Time: " + currentTime.format(TIMEFORMATTER));
         StdDraw.show();
     }
 
