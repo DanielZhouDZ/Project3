@@ -30,7 +30,7 @@ public class Engine {
     private WeightedQuickUnionUF disjointSet;
     public static final TETile FLOOR = Tileset.FLOOR;
     public static final TETile WALL = Tileset.WALL;
-    public static final TETile AVATAR = Tileset.AVATAR;
+    public static final TETile EXIT = Tileset.EXIT;
     private static final int RATIO = 175;
     private static final int ROOMSIZE = 8;
     private static final int RANDOM = 10000;
@@ -41,6 +41,13 @@ public class Engine {
     private static final int PAUSETIME = 250;
     private boolean lit;
     private static final DateTimeFormatter TIMEFORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private Point exit;
+    private static final TETile[] AVATARS = new TETile[] {
+            new TETile('^', Color.white, Color.black, "you"),
+            new TETile('<', Color.white, Color.black, "you"),
+            new TETile('>', Color.white, Color.black, "you"),
+            new TETile('V', Color.white, Color.black, "you"),
+    };
 
     private Point avatarPosition;
     String tileBelow;
@@ -95,6 +102,7 @@ public class Engine {
         this.random = new Random(seed);
         generateWorld();
         spawnAvatar();
+        spawnExit();
     }
 
     private void replayActions(boolean pause) {
@@ -157,12 +165,12 @@ public class Engine {
                 tileBelow = "AVATAR";
             } else if (tile.description().equals("wall")) {
                 tileBelow = "WALL";
-            } else if (tile.description().equals("floor")) {
+            } else if (tile.description().equals("floor") || tile.description().equals("light")) {
                 tileBelow = "FLOOR";
             } else if (tile.description().equals("nothing")) {
                 tileBelow = "NOTHING";
             } else {
-                tileBelow = "LIGHT";
+                tileBelow = tile.description().toUpperCase();
             }
         }
         StdDraw.textLeft((float) 1, HEIGHT + 1, tileBelow);
@@ -265,16 +273,16 @@ public class Engine {
 
     private void moveAvatar(char ch) {
         if (ch == 'W' || ch == 'w') {
-            moveAvatarTo(avatarPosition.getX(), avatarPosition.getY() + 1);
+            moveAvatarTo(avatarPosition.getX(), avatarPosition.getY() + 1, AVATARS[0]);
             keyActions.add('W');
         } else if (ch == 'A' || ch == 'a') {
-            moveAvatarTo(avatarPosition.getX() - 1, avatarPosition.getY());
+            moveAvatarTo(avatarPosition.getX() - 1, avatarPosition.getY(),AVATARS[1]);
             keyActions.add('A');
         } else if (ch == 'S' || ch == 's') {
-            moveAvatarTo(avatarPosition.getX(), avatarPosition.getY() - 1);
+            moveAvatarTo(avatarPosition.getX(), avatarPosition.getY() - 1, AVATARS[3]);
             keyActions.add('S');
         } else if (ch == 'D' || ch == 'd') {
-            moveAvatarTo(avatarPosition.getX() + 1, avatarPosition.getY());
+            moveAvatarTo(avatarPosition.getX() + 1, avatarPosition.getY(), AVATARS[2]);
             keyActions.add('D');
         } else if (ch == 'e' || ch == 'E') {
             toggleLights();
@@ -282,7 +290,12 @@ public class Engine {
         }
     }
 
-    private void moveAvatarTo(int x, int y) {
+    private void spawnExit() {
+        Room exitRoom = this.listOfRooms.get(random.nextInt(this.listOfRooms.size() - 1) + 1);
+        this.exit = exitRoom.getRandomPoint(random);
+    }
+
+    private void moveAvatarTo(int x, int y, TETile AVATAR) {
         if (x >= 0 && x < myWorld.length && y >= 0 && y < myWorld[0].length && myWorld[x][y] != WALL) {
             myWorld[avatarPosition.getX()][avatarPosition.getY()] = past;
             past = myWorld[x][y];
@@ -393,7 +406,7 @@ public class Engine {
         String input = "N" + r.nextInt(RANDOM) + "S";
         engine.ter.initialize(WIDTH, HEIGHT);
         //engine.ter.renderFrame(engine.interactWithInputString(input));
-        engine.ter.renderFrame(engine.interactWithInputString("N123S"));
+        engine.ter.renderFrame(engine.interactWithInputString("N123SAAAAWWWWS:q"));
     }
 
     /**
@@ -536,20 +549,30 @@ public class Engine {
         Room room = listOfRooms.get(0);
         avatarPosition = new Point(room.getCenter().getX(), room.getCenter().getY());
         this.past = myWorld[avatarPosition.getX()][avatarPosition.getY()];
-        myWorld[avatarPosition.getX()][avatarPosition.getY()] = AVATAR;
+        myWorld[avatarPosition.getX()][avatarPosition.getY()] = AVATARS[0];
     }
     private void toggleLights() {
         TETile pastTile;
         if (this.lit) {
+            if (this.avatarPosition.equals(exit)) {
+                System.out.println("Game Over!");
+                System.exit(0);
+            }
             for (Room r : listOfRooms) {
                 this.past = r.closeLights(myWorld);
             }
+            myWorld[exit.getX()][exit.getY()] = FLOOR;
         } else {
             for (Room r : listOfRooms) {
-                pastTile = r.openLights(myWorld);
+                pastTile = r.openLights(myWorld, past);
                 if (pastTile != null) {
                     this.past = pastTile;
                 }
+            }
+            if (!this.avatarPosition.equals(exit)) {
+                myWorld[exit.getX()][exit.getY()] = EXIT;
+            } else {
+                this.past = EXIT;
             }
         }
         this.lit = !this.lit;

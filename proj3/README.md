@@ -39,10 +39,10 @@ To save the file, we'll write the current seed, plus any inputs made by the play
 
 ## Phase 2
 - [x] Player with avatar, input control
-- [ ] Save/persistence
-  - [ ] When the player enters :Q, quit and save
-  - [ ] When the player presses L, the world should load from save
+- [x] Save/persistence
+  - [x] When the player enters :Q, quit and save
+  - [x] When the player presses L, the world should load from save
     - If no previous save, quit with no errors
-- [ ] HUD that shows character under mouse
-- [ ] Modify interactWithInputString() to handle movement, saving, and loading
-- [ ] Ambition Score
+- [x] HUD that shows character under mouse
+- [x] Modify interactWithInputString() to handle movement, saving, and loading
+- [x] Ambition Score

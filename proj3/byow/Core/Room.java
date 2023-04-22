@@ -18,9 +18,9 @@ public class Room {
     private static Map<Integer, TETile> LEVELTOTILES = null;
     private static Map<TETile, Integer> TILESTOLEVEL = null;
     private static final Color COLOR = new Color(128, 192, 128);
-    private static final Color STARTINGCOLOR = new Color(148, 222, 148);
-    private static final double COLORMULT = 1.5;
-    private static final int START = 148;
+    private static final int START = 180;
+    private static final double COLORMULT = 1.34;
+    private static final Color STARTINGCOLOR = new Color(0, START, (int) (START * COLORMULT));
     private final TETile[][] map;
     public Room(int x, int y, int width, int height, TETile[][] map, int index) {
         if (LEVELTOTILES == null) {
@@ -31,8 +31,8 @@ public class Room {
             TILESTOLEVEL.put(LEVELTOTILES.get(LIGHTRANGE), LIGHTRANGE);
             int diff = START / LIGHTRANGE - 1;
             for (int i = LIGHTRANGE - 1; i > 0; i--) {
-                LEVELTOTILES.put(i, new TETile('.', COLOR,
-                        new Color(diff * i, (int) (diff * i * COLORMULT), diff * i), "light"));
+                LEVELTOTILES.put(i, new TETile('·', COLOR,
+                        new Color(0, diff * i, (int) (diff * i * COLORMULT)), "light"));
                 TILESTOLEVEL.put(LEVELTOTILES.get(i), i);
             }
         }
@@ -128,12 +128,13 @@ public class Room {
             }
         }
     }
-    public TETile openLights(TETile[][] world) {
+    public TETile openLights(TETile[][] world, TETile past) {
         TETile output = null;
         for (int i : lights.keySet()) {
             for (Point pt : lights.get(i)) {
-                if (world[pt.getX()][pt.getY()] == Tileset.AVATAR) {
-                    output = LEVELTOTILES.get(i);
+                if (world[pt.getX()][pt.getY()].description().equals("you")) {
+                    output = LEVELTOTILES.
+                            get(Math.max(TILESTOLEVEL.getOrDefault(past, -1), i));
                 } else if (TILESTOLEVEL.containsKey(world[pt.getX()][pt.getY()])) {
                     world[pt.getX()][pt.getY()] = LEVELTOTILES.
                             get(Math.max(TILESTOLEVEL.get(world[pt.getX()][pt.getY()]), i));
@@ -147,7 +148,7 @@ public class Room {
     public TETile closeLights(TETile[][] grid) {
         for (int i : lights.keySet()) {
             for (Point pt : lights.get(i)) {
-                if (grid[pt.getX()][pt.getY()] != Tileset.AVATAR) {
+                if (!grid[pt.getX()][pt.getY()].description().equals("you")) {
                     grid[pt.getX()][pt.getY()] = Tileset.FLOOR;
                 }
             }
