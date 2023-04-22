@@ -38,15 +38,15 @@ public class Engine {
     private static final int SMALLFONTSIZE = 20;
     private static final int LARGEFONTSIZE = 30;
     private static final int CANVASRATIO = 16;
-    private static final int PAUSETIME = 250;
+    private static final int PAUSETIME = 100;
     private boolean lit;
     private static final DateTimeFormatter TIMEFORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private Point exit;
     private static final TETile[] AVATARS = new TETile[] {
-            new TETile('^', Color.white, Color.black, "you"),
-            new TETile('<', Color.white, Color.black, "you"),
-            new TETile('>', Color.white, Color.black, "you"),
-            new TETile('V', Color.white, Color.black, "you"),
+        new TETile('^', Color.white, Color.black, "you"),
+        new TETile('<', Color.white, Color.black, "you"),
+        new TETile('>', Color.white, Color.black, "you"),
+        new TETile('V', Color.white, Color.black, "you"),
     };
 
     private Point avatarPosition;
@@ -276,7 +276,7 @@ public class Engine {
             moveAvatarTo(avatarPosition.getX(), avatarPosition.getY() + 1, AVATARS[0]);
             keyActions.add('W');
         } else if (ch == 'A' || ch == 'a') {
-            moveAvatarTo(avatarPosition.getX() - 1, avatarPosition.getY(),AVATARS[1]);
+            moveAvatarTo(avatarPosition.getX() - 1, avatarPosition.getY(), AVATARS[1]);
             keyActions.add('A');
         } else if (ch == 'S' || ch == 's') {
             moveAvatarTo(avatarPosition.getX(), avatarPosition.getY() - 1, AVATARS[3]);
@@ -295,11 +295,11 @@ public class Engine {
         this.exit = exitRoom.getRandomPoint(random);
     }
 
-    private void moveAvatarTo(int x, int y, TETile AVATAR) {
+    private void moveAvatarTo(int x, int y, TETile avatar) {
         if (x >= 0 && x < myWorld.length && y >= 0 && y < myWorld[0].length && myWorld[x][y] != WALL) {
             myWorld[avatarPosition.getX()][avatarPosition.getY()] = past;
             past = myWorld[x][y];
-            myWorld[x][y] = AVATAR;
+            myWorld[x][y] = avatar;
             avatarPosition.setX(x);
             avatarPosition.setY(y);
         }
